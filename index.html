@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Aplikasi Pengaduan Sarana Sekolah</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #e0f7fa; color: #333; margin: 0; }
+        header { background: #4caf50; color: white; padding: 1rem; text-align: center; }
+        nav { background: #388e3c; padding: 0.5rem; }
+        nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; }
+        nav li { margin: 0 1rem; }
+        nav a { color: white; text-decoration: none; padding: 0.5rem; border-radius: 4px; }
+        nav a:hover { background: #66bb6a; }
+        main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        .user-info { text-align: center; margin-bottom: 2rem; }
+        @media (max-width: 768px) { nav ul { flex-direction: column; } nav li { margin: 0.5rem 0; } main { padding: 1rem; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Aplikasi Pengaduan Sarana Sekolah</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="pengaduan.html">Form Pengaduan</a></li>
+            <li><a href="daftar_pengaduan.html">Daftar Pengaduan</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+    <main>
+        <div class="user-info">
+            <p>Selamat datang, <strong id="userName"></strong> (<span id="userRole"></span>)!</p>
+        </div>
+        <h2>Dashboard</h2>
+        <p>Aplikasi ini memungkinkan siswa dan guru melaporkan kerusakan fasilitas sekolah, serta admin untuk mengelola laporan.</p>
+    </main>
+    <script>
+        // Cek session
+        const user = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (!user) {
+            window.location.href = 'login.html';
+        } else {
+            document.getElementById('userName').textContent = user.username;
+            document.getElementById('userRole').textContent = user.role;
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

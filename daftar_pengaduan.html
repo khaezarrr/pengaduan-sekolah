@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Pengaduan - Aplikasi Pengaduan Sarana Sekolah</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #e0f7fa; color: #333; margin: 0; }
+        header { background: #4caf50; color: white; padding: 1rem; text-align: center; }
+        nav { background: #388e3c; padding: 0.5rem; }
+        nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; }
+        nav li { margin: 0 1rem; }
+        nav a { color: white; text-decoration: none; padding: 0.5rem; border-radius: 4px; }
+        nav a:hover { background: #66bb6a; }
+        main { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #4caf50; color: white; }
+        .admin-only { display: none; } /* Sembunyikan kolom admin secara default */
+        .admin-mode .admin-only { display: table-cell; }
+        img { max-width: 100px; height: auto; border-radius: 4px; } /* Thumbnail foto */
+        @media (max-width: 768px) { 
+            nav ul { flex-direction: column; } 
+            nav li { margin: 0.5rem 0; } 
+            main { padding: 1rem; } 
+            table { font-size: 0.9rem; } 
+            img { max-width: 50px; } /* Lebih kecil di mobile */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Aplikasi Pengaduan Sarana Sekolah</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="pengaduan.html">Form Pengaduan</a></li>
+            <li><a href="daftar_pengaduan.html">Daftar Pengaduan</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h2>Daftar Pengaduan</h2>
+        <table id="complaintsTable">
+            <thead>
+                <tr>
+                    <th>Nama Pelapor</th>
+                    <th>Role</th>
+                    <th>Jenis Sarana</th>
+                    <th>Lokasi</th>
+                    <th>Deskripsi</th>
+                    <th>Tanggal</th>
+                    <th>Status</th>
+                    <th>Foto</th> <!-- Kolom baru untuk foto -->
+                    <th class="admin-only">Ubah Status</th>
+                </tr>
+            </thead>
+            <tbody id="complaintsBody">
+                <!-- Data akan dimuat oleh JavaScript -->
+            </tbody>
+        </table>
+    </main>
+    <script>
+        // Cek session
+        const user = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (!user) {
+            window.location.href = 'login.html';
+        } else if (user.role === 'Admin') {
+            document.body.classList.add('admin-mode'); // Tampilkan kolom admin
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'login.html';
+        }
+
+        // Fungsi update status (hanya untuk admin)
+        function updateStatus(index, newStatus) {
+            if (user.role !== 'Admin') {
+                alert('Hanya Admin yang bisa mengubah status.');
+                return;
+            }
+            let complaints = JSON.parse(localStorage.getItem('complaints')) || [];
+            complaints[index].status = newStatus;
+            localStorage.setItem('complaints', JSON.stringify(complaints));
+            loadComplaints(); // Refresh tabel
+        }
+
+        // Fungsi memuat dan menampilkan daftar pengaduan
+        function loadComplaints() {
+            const complaints = JSON.parse(localStorage.getItem('complaints')) || [];
+            const tbody = document.getElementById('complaintsBody');
+            tbody.innerHTML = '';
+            complaints.forEach((complaint, index) => {
+                const photoCell = complaint.photo 
+                    ? `<img src="${complaint.photo}" alt="Foto pengaduan">` 
+                    : 'Tidak ada foto';
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${complaint.name}</td>
+                    <td>${complaint.role}</td>
+                    <td>${complaint.type}</td>
+                    <td>${complaint.location}</td>
+                    <td>${complaint.description}</td>
+                    <td>${complaint.date}</td>
+                    <td>${complaint.status}</td>
+                    <td>${photoCell}</td> <!-- Tampilkan foto atau teks -->
+                    <td class="admin-only">
+                        <select onchange="updateStatus(${index}, this.value)">
+                            <option value="Menunggu" ${complaint.status === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
+                            <option value="Diproses" ${complaint.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
+                            <option value="Selesai" ${complaint.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                        </select>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Muat data saat halaman dimuat
+        window.onload = loadComplaints;
+    </script>
+</body>
+</html>
