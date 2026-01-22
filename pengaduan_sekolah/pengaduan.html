@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pengaduan - Aplikasi Pengaduan Sarana Sekolah</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #e0f7fa; color: #333; margin: 0; }
+        header { background: #4caf50; color: white; padding: 1rem; text-align: center; }
+        nav { background: #388e3c; padding: 0.5rem; }
+        nav ul { list-style: none; padding: 0; margin: 0; display: flex; justify-content: center; flex-wrap: wrap; }
+        nav li { margin: 0 1rem; }
+        nav a { color: white; text-decoration: none; padding: 0.5rem; border-radius: 4px; }
+        nav a:hover { background: #66bb6a; }
+        main { padding: 2rem; max-width: 600px; margin: 0 auto; }
+        form { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        label { display: block; margin-top: 1rem; }
+        input, select, textarea { width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #4caf50; color: white; padding: 0.75rem; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 1rem; }
+        button:hover { background: #388e3c; }
+        .error { color: red; font-size: 0.9rem; }
+        @media (max-width: 768px) { main { padding: 1rem; } form { padding: 0.5rem; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Aplikasi Pengaduan Sarana Sekolah</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="pengaduan.html">Form Pengaduan</a></li>
+            <li><a href="daftar_pengaduan.html">Daftar Pengaduan</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+    </nav>
+    <main>
+        <h2>Form Pengaduan</h2>
+        <form id="complaintForm">
+            <label for="name">Nama Pelapor *</label>
+            <input type="text" id="name" required>
+            <div class="error" id="nameError"></div>
+
+            <label for="role">Role (Otomatis)</label>
+            <input type="text" id="role" readonly>
+            <div class="error" id="roleError"></div>
+
+            <label for="type">Jenis Sarana *</label>
+            <select id="type" required>
+                <option value="">Pilih Jenis Sarana</option>
+                <option value="Ruang Kelas">Ruang Kelas</option>
+                <option value="Toilet">Toilet</option>
+                <option value="Laboratorium">Laboratorium</option>
+                <option value="Perpustakaan">Perpustakaan</option>
+                <option value="Lapangan">Lapangan</option>
+                <option value="Lainnya">Lainnya</option>
+            </select>
+            <div class="error" id="typeError"></div>
+
+            <label for="location">Lokasi Sarana *</label>
+            <input type="text" id="location" required>
+            <div class="error" id="locationError"></div>
+
+            <label for="description">Deskripsi Kerusakan *</label>
+            <textarea id="description" rows="4" required></textarea>
+            <div class="error" id="descriptionError"></div>
+
+            <label for="photo">Upload Foto (Opsional)</label>
+            <input type="file" id="photo" accept="image/*">
+
+            <button type="submit">Kirim Pengaduan</button>
+        </form>
+    </main>
+    <script>
+        // Cek session dan role
+        const user = JSON.parse(localStorage.getItem('loggedInUser'));
+        if (!user || user.role === 'Admin') {
+            alert('Akses ditolak. Hanya Siswa dan Guru yang bisa mengirim pengaduan.');
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('role').value = user.role;
+        }
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            window.location.href = 'login.html';
+        }
+
+        // Validasi dan submit
+        document.getElementById('complaintForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const type = document.getElementById('type').value;
+            const location = document.getElementById('location').value.trim();
+            const description = document.getElementById('description').value.trim();
+
+            document.getElementById('nameError').textContent = '';
+            document.getElementById('typeError').textContent = '';
+            document.getElementById('locationError').textContent = '';
+            document.getElementById('descriptionError').textContent = '';
+
+            let isValid = true;
+            if (!name) { document.getElementById('nameError').textContent = 'Nama wajib diisi.'; isValid = false; }
+            if (!type) { document.getElementById('typeError').textContent = 'Jenis sarana wajib dipilih.'; isValid = false; }
+            if (!location) { document.getElementById('locationError').textContent = 'Lokasi wajib diisi.'; isValid = false; }
+            if (!description) { document.getElementById('descriptionError').textContent = 'Deskripsi wajib diisi.'; isValid = false; }
+
+            if (isValid) {
+                const photoInput = document.getElementById('photo');
+                let photoData = null;
+                if (photoInput.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        photoData = event.target.result;
+                        saveComplaint(photoData);
+                    };
+                    reader.readAsDataURL(photoInput.files[0]);
+                } else {
+                    saveComplaint(photoData);
+                }
+            }
+        });
+
+        function saveComplaint(photoData) {
+            const complaint = {
+                name: document.getElementById('name').value,
+                role: user.role,
+                type: document.getElementById('type').value,
+                location: document.getElementById('location').value,
+                description: document.getElementById('description').value,
+                photo: photoData,
+                date: new Date().toLocaleDateString(),
+                status: 'Menunggu'
+            };
+            let complaints = JSON.parse(localStorage.getItem('complaints')) || [];
+            complaints.push(complaint);
+            localStorage.setItem('complaints', JSON.stringify(complaints));
+            alert('Pengaduan berhasil dikirim!');
+            document.getElementById('complaintForm').reset();
+        }
+    </script>
+</body>
+</html>
